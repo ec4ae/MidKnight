@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MidKnight | Cardano Memecoin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>MIDKNIGHT</h1>
+    <p>The memecoin of the dark 🦇🌕</p>
+    <button id="connectWallet">Connect Wallet</button>
+  </header>
+
+  <section class="stats">
+    <div class="stat"><span>Total Supply:</span> <strong id="supply">--</strong></div>
+    <div class="stat"><span>Burned:</span> <strong id="burned">--</strong></div>
+    <div class="stat"><span>Price:</span> $<strong id="price">--</strong></div>
+  </section>
+
+  <section class="links">
+    <h2>Ecosystem</h2>
+    <ul>
+      <li><a href="#">Launchpad</a></li>
+      <li><a href="#">Staking Portal</a></li>
+      <li><a href="#">NFT Mint</a></li>
+      <li><a href="#">Telegram Bot</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Made by degens for degens. Join us on <a href="https://twitter.com">Twitter</a> and <a href="https://discord.com">Discord</a>.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
