@@ -132,27 +132,34 @@
 
   <script>
     document.getElementById('connectWallet').addEventListener('click', async () => {
-      if (!window.cardano) {
-        alert('No Cardano wallet extension found. Please install Nami, Eternl, Flint, or another supported wallet.');
-        return;
-      }
-
-      const walletKeys = Object.keys(window.cardano);
-      const availableWallets = walletKeys.filter(key => window.cardano[key]?.enable);
-
-      if (availableWallets.length === 0) {
-        alert('No compatible Cardano wallets detected.');
-        return;
-      }
-
-      let selectedWallet = window.cardano[availableWallets[0]];
-
       try {
+        if (!window.cardano) {
+          alert('No Cardano wallet extension found. Please install Nami, Eternl, Flint, or another supported wallet.');
+          return;
+        }
+
+        const walletKeys = Object.keys(window.cardano).filter(
+          key => window.cardano[key]?.enable
+        );
+
+        if (walletKeys.length === 0) {
+          alert('No compatible Cardano wallets detected.');
+          return;
+        }
+
+        const selectedWallet = window.cardano[walletKeys[0]];
         const api = await selectedWallet.enable();
         const addresses = await api.getUsedAddresses();
-        alert(`Wallet connected: ${addresses[0]}`);
-      } catch (e) {
-        alert('Wallet connection failed: ' + e.message);
+
+        if (!addresses.length) {
+          alert('Wallet connected but no address found.');
+          return;
+        }
+
+        alert(`Wallet connected! Address (hex): ${addresses[0]}`);
+      } catch (error) {
+        console.error(error);
+        alert('Wallet connection failed: ' + error.message);
       }
     });
 
