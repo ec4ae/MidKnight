@@ -104,7 +104,7 @@
 </head>
 <body>
   <header class="hero">
-    <img src="Midknight Logo 2.jpeg" alt="MidKnight logo 2">
+    <img src="Midknight Logo.jpeg" alt="MidKnight logo">
     <h1>MIDKNIGHT</h1>
     <p>The memecoin of the dark 🦇🌕</p>
     <button id="connectWallet">Connect Wallet</button>
@@ -132,16 +132,27 @@
 
   <script>
     document.getElementById('connectWallet').addEventListener('click', async () => {
-      if (!window.cardano || !window.cardano.nami) {
-        alert('Please install Nami Wallet to connect.');
+      if (!window.cardano) {
+        alert('No Cardano wallet extension found. Please install Nami, Eternl, Flint, or another supported wallet.');
         return;
       }
+
+      const walletKeys = Object.keys(window.cardano);
+      const availableWallets = walletKeys.filter(key => window.cardano[key]?.enable);
+
+      if (availableWallets.length === 0) {
+        alert('No compatible Cardano wallets detected.');
+        return;
+      }
+
+      let selectedWallet = window.cardano[availableWallets[0]];
+
       try {
-        const api = await window.cardano.nami.enable();
+        const api = await selectedWallet.enable();
         const addresses = await api.getUsedAddresses();
-        alert('Wallet connected: ' + addresses[0]);
+        alert(`Wallet connected: ${addresses[0]}`);
       } catch (e) {
-        alert('Wallet connection failed.');
+        alert('Wallet connection failed: ' + e.message);
       }
     });
 
