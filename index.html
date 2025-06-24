@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  $1$2
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MidKnight | Cardano Memecoin</title>
+  <style>
     .connect-wallet-menu {
       display: none;
       position: absolute;
@@ -109,15 +111,84 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-    }$3
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MidKnight | Cardano Memecoin</title>
-  
+    }
+    
+    /* Additional styling for the page */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 2rem;
+      background-color: #000;
+      color: white;
+    }
+    
+    .hero h1 {
+      font-size: 3rem;
+      margin: 1rem 0;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 2rem;
+      background-color: white;
+      margin: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .links {
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .links ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+    }
+    
+    .links a {
+      color: #000;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 2rem;
+      margin-top: 2rem;
+      background-color: #000;
+      color: white;
+    }
+    
+    footer a {
+      color: #fff;
+    }
+    
+    #connectWallet {
+      margin: 1rem auto;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
   <header class="hero">
-    <img src="Midknight Logo.jpeg" alt="MidKnight logo" style="width: 100%; max-height: 400px; object-fit: cover;">
+    <img src="Midknight-Logo.jpeg" alt="MidKnight logo" style="width: 100%; max-height: 400px; object-fit: cover;">
     <h1>MIDKNIGHT</h1>
     <p>The memecoin of the dark 🦇🌕</p>
     <div id="connectWallet"></div>
@@ -143,12 +214,54 @@
     <p>Made by degens for degens. Join us on <a href="https://twitter.com">Twitter</a> and <a href="https://discord.com">Discord</a>.</p>
   </footer>
 
+  <!-- Load the wallet connect script first -->
+  <script src="https://cardano-foundation.github.io/cardano-connect-with-wallet/bundle-latest/index.js"></script>
+  
   <script>
-    const Core = typeof CardanoConnectWithWalletCore !== 'undefined' ? CardanoConnectWithWalletCore : undefined;
+    // Wait for the DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize wallet connection
+      initWalletConnect();
+      
+      // Fetch and display stats
+      fetchStats();
+    });
+
+    async function fetchStats() {
+      // In a real implementation, you would fetch these from an API
+      document.getElementById('supply').textContent = '1,000,000,000';
+      document.getElementById('burned').textContent = '150,000,000';
+      document.getElementById('price').textContent = '0.0025';
+    }
+
+    function initWalletConnect() {
+      // Check if the CardanoConnectWithWalletCore is available
+      if (typeof CardanoConnectWithWalletCore === 'undefined') {
+        console.error('CardanoConnectWithWalletCore is not defined');
+        return;
+      }
+
+      const Core = CardanoConnectWithWalletCore;
+      const container = document.getElementById('connectWallet');
+      
+      if (!container) {
+        console.error('Connect wallet container not found');
+        return;
+      }
+
+      // Initialize the wallet connection
+      new CardanoConnectWallet(container, {
+        dAppName: 'MidKnight',
+        dAppUrl: window.location.href,
+        supportedWallets: ['Flint', 'Nami', 'Eternl', 'Yoroi', 'Typhon', 'NuFi', 'Lace']
+      });
+    }
 
     class CardanoConnectWallet {
       constructor(parent, options = {}) {
         if (!parent) throw new Error('CardanoConnect parent is not defined.');
+        
+        const Core = typeof CardanoConnectWithWalletCore !== 'undefined' ? CardanoConnectWithWalletCore : undefined;
         if (!Core) throw new Error('CardanoConnectWithWalletCore is not defined.');
 
         const {
@@ -157,9 +270,7 @@
           showEnabledWalletIcon = true,
           peerConnectEnabled = false,
           showUnavailableWallets = undefined,
-          supportedWallets = [
-            'Flint', 'Nami', 'Eternl', 'Yoroi', 'Typhon', 'NuFi', 'Lace'
-          ],
+          supportedWallets = ['Flint', 'Nami', 'Eternl', 'Yoroi', 'Typhon', 'NuFi', 'Lace'],
           alwaysVisibleWallets = [],
           message = undefined,
           dAppName = 'MidKnight',
@@ -185,6 +296,8 @@
         this.showAccountBalance = showAccountBalance;
         this.showEnabledWalletIcon = showEnabledWalletIcon;
         this.message = message;
+        this.dAppName = dAppName;
+        this.dAppUrl = dAppUrl;
 
         this.wallet.addEventListener('enabledWallet', () => this.updateDropdownMenu());
         this.wallet.addEventListener('installedWalletExtensions', () => this.updateDropdownMenu());
@@ -211,6 +324,9 @@
       }
 
       updateDropdownMenu() {
+        const Core = typeof CardanoConnectWithWalletCore !== 'undefined' ? CardanoConnectWithWalletCore : undefined;
+        if (!Core) return;
+
         const availableWallets = Core.estimateAvailableWallets(
           this.supportedWallets,
           this.showUnavailableWallets,
@@ -244,129 +360,6 @@
           }
         }
       }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('connectWallet');
-      if (container) new CardanoConnectWallet(container);
-    });
-
-    async function fetchStats() {
-      document.getElementById('supply').textContent = '1,000,000,000';
-      document.getElementById('burned').textContent = '150,000,000';
-      document.getElementById('price').textContent = '0.0025';
-    }
-    fetchStats();
-  </script>
-  <script src="https://cardano-foundation.github.io/cardano-connect-with-wallet/bundle-latest/index.js" defer onload="initWalletConnect()"></script>
-
-  <script>
-    function initWalletConnect() {
-      const Core = typeof CardanoConnectWithWalletCore !== 'undefined' ? CardanoConnectWithWalletCore : undefined;
-      if (!Core) return;
-
-      class CardanoConnectWallet {
-        constructor(parent, options = {}) {
-          if (!parent) throw new Error('CardanoConnect parent is not defined.');
-          if (!Core) throw new Error('CardanoConnectWithWalletCore is not defined.');
-
-          const {
-            label = 'Connect Wallet',
-            showAccountBalance = false,
-            showEnabledWalletIcon = true,
-            peerConnectEnabled = false,
-            showUnavailableWallets = undefined,
-            supportedWallets = [
-              'Flint', 'Nami', 'Eternl', 'Yoroi', 'Typhon', 'NuFi', 'Lace'
-            ],
-            alwaysVisibleWallets = [],
-            message = undefined,
-            dAppName = 'MidKnight',
-            dAppUrl = 'https://midknight.com'
-          } = options;
-
-          this.wallet = Core.Wallet;
-          this.dropdown = document.createElement('div');
-          this.dropdown.className = 'connect-wallet-dropdown';
-
-          this.button = document.createElement('button');
-          this.button.className = 'connect-wallet-button';
-          this.menu = document.createElement('div');
-          this.menu.className = 'connect-wallet-menu';
-
-          this.dropdown.append(this.button, this.menu);
-          parent.appendChild(this.dropdown);
-
-          this.supportedWallets = supportedWallets;
-          this.alwaysVisibleWallets = alwaysVisibleWallets;
-          this.showUnavailableWallets = showUnavailableWallets || Core.UnavailableWalletVisibility.SHOW_UNAVAILABLE_ON_MOBILE;
-          this.label = label;
-          this.showAccountBalance = showAccountBalance;
-          this.showEnabledWalletIcon = showEnabledWalletIcon;
-          this.message = message;
-
-          this.wallet.addEventListener('enabledWallet', () => this.updateDropdownMenu());
-          this.wallet.addEventListener('installedWalletExtensions', () => this.updateDropdownMenu());
-          this.wallet.addEventListener('stakeAddress', () => this.updateDropdownMenu());
-          this.wallet.addEventListener('connected', () => this.updateDropdownMenu());
-
-          this.wallet.startInjectWalletListener();
-          this.updateDropdownMenu();
-        }
-
-        createMenuItem(label, onClick, iconSrc, id) {
-          const item = document.createElement('span');
-          item.className = 'connect-wallet-menu-item';
-          if (onClick) item.onclick = onClick;
-          if (id) item.id = id;
-          if (iconSrc) {
-            const icon = document.createElement('img');
-            icon.src = iconSrc;
-            icon.className = 'connect-wallet-menu-item-icon';
-            item.appendChild(icon);
-          }
-          item.appendChild(document.createTextNode(label));
-          return item;
-        }
-
-        updateDropdownMenu() {
-          const availableWallets = Core.estimateAvailableWallets(
-            this.supportedWallets,
-            this.showUnavailableWallets,
-            this.alwaysVisibleWallets,
-            this.wallet.installedExtensions
-          );
-
-          const title = this.wallet.stakeAddress && this.wallet.connected
-            ? (this.showAccountBalance ? `₳ ${Math.round(this.wallet.accountBalance * 100) / 100}` : `${this.wallet.stakeAddress.slice(0, 12)}...`)
-            : this.label;
-
-          this.button.innerHTML = '';
-          this.button.textContent = title;
-
-          this.menu.innerHTML = '';
-
-          if (availableWallets.length === 0) {
-            this.menu.appendChild(this.createMenuItem(`Install a wallet (${Core.formatSupportedWallets(this.supportedWallets)} supported)`));
-          } else if (this.wallet.stakeAddress) {
-            if (this.message) {
-              this.menu.appendChild(this.createMenuItem('Sign Message', () => this.wallet.signMessage(this.message)));
-            }
-            this.menu.appendChild(this.createMenuItem('Disconnect', () => this.wallet.disconnect()));
-          } else {
-            for (const ext of availableWallets) {
-              this.menu.appendChild(this.createMenuItem(
-                Core.capitalize(ext),
-                () => this.wallet.connectToWallet(ext),
-                Core.getWalletIcon(ext)
-              ));
-            }
-          }
-        }
-      }
-
-      const container = document.getElementById('connectWallet');
-      if (container) new CardanoConnectWallet(container);
     }
   </script>
 </body>
