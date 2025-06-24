@@ -149,9 +149,54 @@
       font-weight: bold;
     }
 
-    #wallet-balance {
-      margin-top: 5px;
+    #wallet-info {
+      margin-top: 15px;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .wallet-detail {
+      margin: 5px 0;
       font-size: 0.9em;
+      word-break: break-all;
+    }
+
+    .wallet-section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .wallet-section-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .wallet-asset {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px dashed #eee;
+    }
+
+    #advanced-actions {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .action-button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      background-color: #000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -163,7 +208,12 @@
     <div class="wallet-container">
       <div id="wallet-connect"></div>
       <div id="wallet-status">Wallet not connected</div>
-      <div id="wallet-balance"></div>
+      <div id="wallet-info" style="display: none;"></div>
+      <div id="advanced-actions" style="display: none;">
+        <button class="action-button" id="sign-data-btn">Sign Message</button>
+        <button class="action-button" id="get-utxos-btn">Get UTXOs</button>
+        <button class="action-button" id="get-assets-btn">Get Assets</button>
+      </div>
     </div>
   </header>
 
@@ -191,6 +241,10 @@
   <script src="https://unpkg.com/@meshsdk/core@latest/dist/mesh.js"></script>
 
   <script>
+    // Global wallet reference
+    let wallet = null;
+    let walletName = null;
+
     // Wait for everything to load
     document.addEventListener('DOMContentLoaded', async function() {
       // Check if Mesh is available
@@ -202,8 +256,8 @@
 
       const { BrowserWallet } = Mesh;
       
-      // Initialize the wallet connection
-      initMeshWallet(BrowserWallet);
+      // Initialize the wallet connection UI
+      initWalletUI(BrowserWallet);
     });
 
     function showFallbackButton() {
@@ -217,19 +271,20 @@
       }
     }
 
-    async function initMeshWallet(BrowserWallet) {
-      let wallet = null;
-      let walletName = null;
-      
-      // Get installed wallets
-      const installedWallets = BrowserWallet.getInstalledWallets();
+    async function initWalletUI(BrowserWallet) {
       const container = document.getElementById('wallet-connect');
+      const statusElement = document.getElementById('wallet-status');
+      const infoElement = document.getElementById('wallet-info');
+      const advancedActions = document.getElementById('advanced-actions');
       
-      if (!container) {
-        console.error('Wallet container not found');
+      if (!container || !statusElement) {
+        console.error('Required elements not found');
         return;
       }
 
+      // Get installed wallets
+      const installedWallets = BrowserWallet.getInstalledWallets();
+      
       // Create wallet dropdown HTML
       container.innerHTML = `
         <div class="wallet-dropdown">
@@ -255,8 +310,6 @@
       // Get DOM elements
       const walletButton = document.getElementById('wallet-main-button');
       const walletMenu = document.getElementById('wallet-menu');
-      const walletStatus = document.getElementById('wallet-status');
-      const walletBalance = document.getElementById('wallet-balance');
 
       // Toggle menu visibility
       walletButton.addEventListener('click', () => {
@@ -275,70 +328,176 @@
         item.addEventListener('click', async () => {
           const selectedWallet = item.getAttribute('data-wallet');
           try {
-            wallet = await BrowserWallet.enable(selectedWallet);
+            // Enable wallet with CIP-95 support
+            wallet = await BrowserWallet.enable(selectedWallet, [95]);
             walletName = selectedWallet;
             
             // Update UI
             walletButton.textContent = selectedWallet;
-            walletStatus.textContent = `Connected to ${selectedWallet}`;
+            statusElement.textContent = `Connected to ${selectedWallet}`;
             walletMenu.style.display = 'none';
+            infoElement.style.display = 'block';
+            advancedActions.style.display = 'block';
             
-            // Get wallet info
-            updateWalletInfo(wallet, walletName);
-            
-            // Add disconnect option
-            addDisconnectOption();
+            // Get and display wallet info
+            await updateWalletInfo();
             
           } catch (error) {
             console.error('Connection error:', error);
-            walletStatus.textContent = `Failed to connect: ${error.message}`;
+            statusElement.textContent = `Failed to connect: ${error.message}`;
           }
         });
       });
 
-      // Update wallet info (balance, address, etc)
-      async function updateWalletInfo(wallet, name) {
-        try {
-          const balance = await wallet.getBalance();
-          const lovelace = await wallet.getLovelace();
-          const address = (await wallet.getUsedAddresses())[0];
-          
-          // Format balance (1 ADA = 1,000,000 lovelace)
-          const adaBalance = (lovelace / 1000000).toFixed(2);
-          
-          walletBalance.innerHTML = `
-            Address: ${address.substring(0, 10)}...${address.substring(address.length - 10)}<br>
-            Balance: ${adaBalance} ADA
-          `;
-          
-          // You can add more wallet info here as needed
-          
-        } catch (error) {
-          console.error('Error getting wallet info:', error);
-          walletBalance.textContent = 'Error loading wallet details';
-        }
-      }
+      // Set up advanced action buttons
+      document.getElementById('sign-data-btn').addEventListener('click', signData);
+      document.getElementById('get-utxos-btn').addEventListener('click', getUTXOs);
+      document.getElementById('get-assets-btn').addEventListener('click', getAssets);
+    }
 
-      // Add disconnect option to menu
-      function addDisconnectOption() {
-        const menu = document.getElementById('wallet-menu');
-        const disconnectItem = document.createElement('div');
-        disconnectItem.className = 'wallet-menu-item';
-        disconnectItem.textContent = 'Disconnect';
-        disconnectItem.style.color = 'red';
+    // Update wallet info display
+    async function updateWalletInfo() {
+      const infoElement = document.getElementById('wallet-info');
+      const statusElement = document.getElementById('wallet-status');
+      
+      if (!wallet || !infoElement) return;
+
+      try {
+        // Get all wallet information
+        const [
+          balance,
+          lovelace,
+          changeAddress,
+          networkId,
+          rewardAddresses,
+          usedAddresses,
+          unusedAddresses,
+          extensions,
+          policyIds,
+          drepInfo
+        ] = await Promise.all([
+          wallet.getBalance(),
+          wallet.getLovelace(),
+          wallet.getChangeAddress(),
+          wallet.getNetworkId(),
+          wallet.getRewardAddresses(),
+          wallet.getUsedAddresses(),
+          wallet.getUnusedAddresses(),
+          wallet.getExtensions(),
+          wallet.getPolicyIds(),
+          wallet.getDRep ? wallet.getDRep() : Promise.resolve(null)
+        ]);
+
+        // Format balance (1 ADA = 1,000,000 lovelace)
+        const adaBalance = (lovelace / 1000000).toFixed(6);
         
-        disconnectItem.addEventListener('click', () => {
-          wallet = null;
-          walletName = null;
-          walletButton.textContent = 'CONNECT WALLET';
-          walletStatus.textContent = 'Wallet disconnected';
-          walletBalance.textContent = '';
+        // Build wallet info HTML
+        infoElement.innerHTML = `
+          <div class="wallet-section">
+            <div class="wallet-section-title">Basic Info</div>
+            <div class="wallet-detail"><strong>Network:</strong> ${networkId === 1 ? 'Mainnet' : 'Testnet'}</div>
+            <div class="wallet-detail"><strong>Balance:</strong> ${adaBalance} ADA</div>
+          </div>
           
-          // Remove disconnect option
-          disconnectItem.remove();
-        });
+          <div class="wallet-section">
+            <div class="wallet-section-title">Addresses</div>
+            <div class="wallet-detail"><strong>Change Address:</strong> ${shortenAddress(changeAddress)}</div>
+            <div class="wallet-detail"><strong>Reward Address:</strong> ${rewardAddresses.length ? shortenAddress(rewardAddresses[0]) : 'None'}</div>
+          </div>
+          
+          <div class="wallet-section">
+            <div class="wallet-section-title">Assets (${balance.length})</div>
+            ${balance.slice(0, 5).map(asset => `
+              <div class="wallet-asset">
+                <span>${asset.unit === 'lovelace' ? 'ADA' : shortenAssetName(asset.unit)}</span>
+                <span>${formatQuantity(asset.quantity)}</span>
+              </div>
+            `).join('')}
+            ${balance.length > 5 ? `<div class="wallet-detail">+ ${balance.length - 5} more assets</div>` : ''}
+          </div>
+          
+          ${drepInfo ? `
+          <div class="wallet-section">
+            <div class="wallet-section-title">DRep Info (CIP-95)</div>
+            <div class="wallet-detail"><strong>DRep ID:</strong> ${shortenAddress(drepInfo.dRepIDCip105)}</div>
+          </div>
+          ` : ''}
+          
+          <div class="wallet-section">
+            <div class="wallet-section-title">Extensions</div>
+            <div class="wallet-detail">${extensions.map(ext => `CIP-${ext.cip}`).join(', ') || 'None'}</div>
+          </div>
+        `;
         
-        menu.appendChild(disconnectItem);
+      } catch (error) {
+        console.error('Error getting wallet info:', error);
+        statusElement.textContent = `Error loading wallet details: ${error.message}`;
+      }
+    }
+
+    // Helper to shorten addresses
+    function shortenAddress(address, chars = 8) {
+      return address ? `${address.substring(0, chars)}...${address.substring(address.length - chars)}` : '';
+    }
+
+    // Helper to shorten asset names
+    function shortenAssetName(unit, chars = 8) {
+      if (unit === 'lovelace') return 'ADA';
+      if (unit.length <= 16) return unit;
+      return `${unit.substring(0, chars)}...${unit.substring(unit.length - chars)}`;
+    }
+
+    // Helper to format quantities
+    function formatQuantity(quantity) {
+      if (quantity.length > 10) {
+        return `${quantity.substring(0, 4)}...${quantity.substring(quantity.length - 4)}`;
+      }
+      return quantity;
+    }
+
+    // Sign data function
+    async function signData() {
+      if (!wallet) return;
+      
+      try {
+        const addresses = await wallet.getUsedAddresses();
+        const payload = "MidKnight Memecoin Verification";
+        const signature = await wallet.signData(addresses[0], payload);
+        
+        alert(`Successfully signed data!\n\nPayload: ${payload}\n\nSignature: ${signature.signature.substring(0, 30)}...`);
+      } catch (error) {
+        console.error('Error signing data:', error);
+        alert(`Failed to sign data: ${error.message}`);
+      }
+    }
+
+    // Get UTXOs function
+    async function getUTXOs() {
+      if (!wallet) return;
+      
+      try {
+        const utxos = await wallet.getUtxos();
+        alert(`Found ${utxos.length} UTXOs in wallet.\n\nFirst UTXO value: ${utxos[0]?.output?.amount[0]?.quantity || 'N/A'} lovelace`);
+      } catch (error) {
+        console.error('Error getting UTXOs:', error);
+        alert(`Failed to get UTXOs: ${error.message}`);
+      }
+    }
+
+    // Get assets function
+    async function getAssets() {
+      if (!wallet) return;
+      
+      try {
+        const assets = await wallet.getAssets();
+        const assetList = assets.slice(0, 5).map(asset => 
+          `${asset.assetName || asset.unit}: ${asset.quantity}`
+        ).join('\n');
+        
+        alert(`Wallet Assets (${assets.length}):\n\n${assetList}${assets.length > 5 ? '\n...and more' : ''}`);
+      } catch (error) {
+        console.error('Error getting assets:', error);
+        alert(`Failed to get assets: ${error.message}`);
       }
     }
   </script>
