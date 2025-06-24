@@ -50,6 +50,17 @@
       color: #000;
     }
 
+    .wallet-select {
+      margin: 20px auto;
+      text-align: center;
+    }
+
+    .wallet-select label, .wallet-select select {
+      font-size: 1rem;
+      color: #f0f0f0;
+      margin: 0 5px;
+    }
+
     .stats {
       display: flex;
       justify-content: center;
@@ -107,6 +118,10 @@
     <img src="Midknight Logo.jpeg" alt="MidKnight logo">
     <h1>MIDKNIGHT</h1>
     <p>The memecoin of the dark 🦇🌕</p>
+    <div class="wallet-select">
+      <label for="walletPicker">Choose Wallet:</label>
+      <select id="walletPicker"></select>
+    </div>
     <button id="connectWallet">Connect Wallet</button>
   </header>
 
@@ -131,6 +146,24 @@
   </footer>
 
   <script>
+    let walletKeys = [];
+
+    window.addEventListener('load', () => {
+      if (window.cardano) {
+        walletKeys = Object.keys(window.cardano).filter(
+          key => window.cardano[key]?.enable
+        );
+
+        const walletPicker = document.getElementById('walletPicker');
+        walletKeys.forEach(wallet => {
+          const option = document.createElement('option');
+          option.value = wallet;
+          option.textContent = wallet;
+          walletPicker.appendChild(option);
+        });
+      }
+    });
+
     document.getElementById('connectWallet').addEventListener('click', async () => {
       try {
         if (!window.cardano) {
@@ -138,17 +171,13 @@
           return;
         }
 
-        const walletKeys = Object.keys(window.cardano).filter(
-          key => window.cardano[key]?.enable
-        );
-
-        if (walletKeys.length === 0) {
-          alert('No compatible Cardano wallets detected.');
+        const selectedKey = document.getElementById('walletPicker').value;
+        if (!selectedKey || !window.cardano[selectedKey]) {
+          alert('Please select a valid wallet.');
           return;
         }
 
-        const selectedWallet = window.cardano[walletKeys[0]];
-        const api = await selectedWallet.enable();
+        const api = await window.cardano[selectedKey].enable();
         const addresses = await api.getUsedAddresses();
 
         if (!addresses.length) {
@@ -164,7 +193,6 @@
     });
 
     async function fetchStats() {
-      // Mock values - replace with Blockfrost API or other Cardano API later
       document.getElementById('supply').textContent = '1,000,000,000';
       document.getElementById('burned').textContent = '150,000,000';
       document.getElementById('price').textContent = '0.0025';
