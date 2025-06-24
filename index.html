@@ -10,6 +10,14 @@
       display: flex;
       justify-content: center;
       margin: 20px 0;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .wallet-dropdown {
+      position: relative;
+      display: inline-block;
+      min-width: 200px;
     }
     
     .wallet-button {
@@ -24,6 +32,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
     }
     
     .wallet-button:hover {
@@ -139,17 +148,23 @@
       text-align: center;
       font-weight: bold;
     }
+
+    #wallet-balance {
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
   <header class="hero">
-    <img src="Midknight Logo 2.jpeg" alt="MidKnight logo 2" class="logo">
+    <img src="Midknight-Logo.jpg" alt="MidKnight logo" class="logo">
     <h1>MIDKNIGHT</h1>
     <p>The memecoin of the dark 🦇🌕</p>
     <div class="wallet-container">
       <div id="wallet-connect"></div>
+      <div id="wallet-status">Wallet not connected</div>
+      <div id="wallet-balance"></div>
     </div>
-    <div id="wallet-status">Wallet not connected</div>
   </header>
 
   <section class="stats">
@@ -172,23 +187,23 @@
     <p>Made by degens for degens. Join us on <a href="https://twitter.com">Twitter</a> and <a href="https://discord.com">Discord</a>.</p>
   </footer>
 
-  <!-- Load React and Wallet Lite -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@sundaeswap/wallet-lite/dist/wallet-lite.umd.js"></script>
+  <!-- Load Mesh SDK -->
+  <script src="https://unpkg.com/@meshsdk/core@latest/dist/mesh.js"></script>
 
   <script>
     // Wait for everything to load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Check if WalletLite is available
-      if (typeof WalletLite === 'undefined') {
-        console.error('WalletLite not loaded');
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Check if Mesh is available
+      if (typeof Mesh === 'undefined') {
+        console.error('Mesh SDK not loaded');
         showFallbackButton();
         return;
       }
 
+      const { BrowserWallet } = Mesh;
+      
       // Initialize the wallet connection
-      initWalletLite();
+      initMeshWallet(BrowserWallet);
     });
 
     function showFallbackButton() {
@@ -196,101 +211,135 @@
       if (container) {
         container.innerHTML = `
           <button class="wallet-button" onclick="alert('Please install a Cardano wallet like Nami or Eternl')">
-            CONNECT WALLET (Script Failed to Load)
+            CONNECT WALLET (SDK Failed to Load)
           </button>
         `;
       }
     }
 
-    function initWalletLite() {
-      const { WalletObserverProvider, RenderWallet } = WalletLite;
+    async function initMeshWallet(BrowserWallet) {
+      let wallet = null;
+      let walletName = null;
       
-      // Create a simple wallet button component
-      const WalletButton = () => (
-        <RenderWallet 
-          render={(state) => {
-            const statusElement = document.getElementById('wallet-status');
-            if (statusElement) {
-              if (state.connectedWallet) {
-                statusElement.textContent = `Connected: ${state.connectedWallet} | Balance: ${state.adaBalance?.value || 0} ₳`;
-              } else {
-                statusElement.textContent = "Wallet not connected";
-              }
-            }
-            
-            return (
-              <div className="wallet-dropdown">
-                <button 
-                  className="wallet-button"
-                  onClick={() => {
-                    const menu = document.querySelector('.wallet-menu');
-                    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                  }}
-                >
-                  {state.connectedWallet 
-                    ? `${state.connectedWallet} (${state.adaBalance?.value || 0} ₳)`
-                    : 'CONNECT WALLET'}
-                </button>
-                
-                <div className="wallet-menu" style={{display: 'none'}}>
-                  {!state.connectedWallet ? (
-                    <>
-                      <div className="wallet-menu-item" onClick={() => state.connectWallet('nami')}>
-                        <img src="https://cdn.jsdelivr.net/gh/sundaeswap-finance/wallet-lite@main/public/wallet-icons/nami.svg" className="wallet-menu-item-icon" />
-                        Nami
-                      </div>
-                      <div className="wallet-menu-item" onClick={() => state.connectWallet('eternl')}>
-                        <img src="https://cdn.jsdelivr.net/gh/sundaeswap-finance/wallet-lite@main/public/wallet-icons/eternl.svg" className="wallet-menu-item-icon" />
-                        Eternl
-                      </div>
-                      <div className="wallet-menu-item" onClick={() => state.connectWallet('flint')}>
-                        <img src="https://cdn.jsdelivr.net/gh/sundaeswap-finance/wallet-lite@main/public/wallet-icons/flint.svg" className="wallet-menu-item-icon" />
-                        Flint
-                      </div>
-                      <div className="wallet-menu-item" onClick={() => state.connectWallet('lace')}>
-                        <img src="https://cdn.jsdelivr.net/gh/sundaeswap-finance/wallet-lite@main/public/wallet-icons/lace.svg" className="wallet-menu-item-icon" />
-                        Lace
-                      </div>
-                    </>
-                  ) : (
-                    <div className="wallet-menu-item" onClick={() => state.disconnectWallet()}>
-                      Disconnect
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          }}
-        />
-      );
-
-      // Create the root component
-      const Root = ({ children }) => (
-        <WalletObserverProvider>
-          {children}
-        </WalletObserverProvider>
-      );
-
-      // Render the app
-      const walletConnectElement = document.getElementById('wallet-connect');
-      if (walletConnectElement) {
-        const root = ReactDOM.createRoot(walletConnectElement);
-        root.render(
-          <Root>
-            <WalletButton />
-          </Root>
-        );
+      // Get installed wallets
+      const installedWallets = BrowserWallet.getInstalledWallets();
+      const container = document.getElementById('wallet-connect');
+      
+      if (!container) {
+        console.error('Wallet container not found');
+        return;
       }
 
-      // Handle clicks outside the menu to close it
-      document.addEventListener('click', function(e) {
+      // Create wallet dropdown HTML
+      container.innerHTML = `
+        <div class="wallet-dropdown">
+          <button class="wallet-button" id="wallet-main-button">
+            CONNECT WALLET
+          </button>
+          <div class="wallet-menu" id="wallet-menu">
+            ${installedWallets.map(wallet => `
+              <div class="wallet-menu-item" data-wallet="${wallet.name}">
+                <img src="${wallet.icon}" class="wallet-menu-item-icon" />
+                ${wallet.name}
+              </div>
+            `).join('')}
+            ${installedWallets.length === 0 ? `
+              <div class="wallet-menu-item">
+                No wallets detected. Install Nami, Eternl, or Flint.
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      // Get DOM elements
+      const walletButton = document.getElementById('wallet-main-button');
+      const walletMenu = document.getElementById('wallet-menu');
+      const walletStatus = document.getElementById('wallet-status');
+      const walletBalance = document.getElementById('wallet-balance');
+
+      // Toggle menu visibility
+      walletButton.addEventListener('click', () => {
+        walletMenu.style.display = walletMenu.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // Handle clicks outside the menu
+      document.addEventListener('click', (e) => {
         if (!e.target.closest('.wallet-dropdown')) {
-          const menus = document.querySelectorAll('.wallet-menu');
-          menus.forEach(menu => {
-            menu.style.display = 'none';
-          });
+          walletMenu.style.display = 'none';
         }
       });
+
+      // Handle wallet selection
+      document.querySelectorAll('.wallet-menu-item[data-wallet]').forEach(item => {
+        item.addEventListener('click', async () => {
+          const selectedWallet = item.getAttribute('data-wallet');
+          try {
+            wallet = await BrowserWallet.enable(selectedWallet);
+            walletName = selectedWallet;
+            
+            // Update UI
+            walletButton.textContent = selectedWallet;
+            walletStatus.textContent = `Connected to ${selectedWallet}`;
+            walletMenu.style.display = 'none';
+            
+            // Get wallet info
+            updateWalletInfo(wallet, walletName);
+            
+            // Add disconnect option
+            addDisconnectOption();
+            
+          } catch (error) {
+            console.error('Connection error:', error);
+            walletStatus.textContent = `Failed to connect: ${error.message}`;
+          }
+        });
+      });
+
+      // Update wallet info (balance, address, etc)
+      async function updateWalletInfo(wallet, name) {
+        try {
+          const balance = await wallet.getBalance();
+          const lovelace = await wallet.getLovelace();
+          const address = (await wallet.getUsedAddresses())[0];
+          
+          // Format balance (1 ADA = 1,000,000 lovelace)
+          const adaBalance = (lovelace / 1000000).toFixed(2);
+          
+          walletBalance.innerHTML = `
+            Address: ${address.substring(0, 10)}...${address.substring(address.length - 10)}<br>
+            Balance: ${adaBalance} ADA
+          `;
+          
+          // You can add more wallet info here as needed
+          
+        } catch (error) {
+          console.error('Error getting wallet info:', error);
+          walletBalance.textContent = 'Error loading wallet details';
+        }
+      }
+
+      // Add disconnect option to menu
+      function addDisconnectOption() {
+        const menu = document.getElementById('wallet-menu');
+        const disconnectItem = document.createElement('div');
+        disconnectItem.className = 'wallet-menu-item';
+        disconnectItem.textContent = 'Disconnect';
+        disconnectItem.style.color = 'red';
+        
+        disconnectItem.addEventListener('click', () => {
+          wallet = null;
+          walletName = null;
+          walletButton.textContent = 'CONNECT WALLET';
+          walletStatus.textContent = 'Wallet disconnected';
+          walletBalance.textContent = '';
+          
+          // Remove disconnect option
+          disconnectItem.remove();
+        });
+        
+        menu.appendChild(disconnectItem);
+      }
     }
   </script>
 </body>
