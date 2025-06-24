@@ -113,7 +113,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MidKnight | Cardano Memecoin</title>
-  <script src="https://cardano-foundation.github.io/cardano-connect-with-wallet/bundle-latest/index.js"></script>
+  
 </head>
 <body>
   <header class="hero">
@@ -257,6 +257,117 @@
       document.getElementById('price').textContent = '0.0025';
     }
     fetchStats();
+  </script>
+  <script src="https://cardano-foundation.github.io/cardano-connect-with-wallet/bundle-latest/index.js" defer onload="initWalletConnect()"></script>
+
+  <script>
+    function initWalletConnect() {
+      const Core = typeof CardanoConnectWithWalletCore !== 'undefined' ? CardanoConnectWithWalletCore : undefined;
+      if (!Core) return;
+
+      class CardanoConnectWallet {
+        constructor(parent, options = {}) {
+          if (!parent) throw new Error('CardanoConnect parent is not defined.');
+          if (!Core) throw new Error('CardanoConnectWithWalletCore is not defined.');
+
+          const {
+            label = 'Connect Wallet',
+            showAccountBalance = false,
+            showEnabledWalletIcon = true,
+            peerConnectEnabled = false,
+            showUnavailableWallets = undefined,
+            supportedWallets = [
+              'Flint', 'Nami', 'Eternl', 'Yoroi', 'Typhon', 'NuFi', 'Lace'
+            ],
+            alwaysVisibleWallets = [],
+            message = undefined,
+            dAppName = 'MidKnight',
+            dAppUrl = 'https://midknight.com'
+          } = options;
+
+          this.wallet = Core.Wallet;
+          this.dropdown = document.createElement('div');
+          this.dropdown.className = 'connect-wallet-dropdown';
+
+          this.button = document.createElement('button');
+          this.button.className = 'connect-wallet-button';
+          this.menu = document.createElement('div');
+          this.menu.className = 'connect-wallet-menu';
+
+          this.dropdown.append(this.button, this.menu);
+          parent.appendChild(this.dropdown);
+
+          this.supportedWallets = supportedWallets;
+          this.alwaysVisibleWallets = alwaysVisibleWallets;
+          this.showUnavailableWallets = showUnavailableWallets || Core.UnavailableWalletVisibility.SHOW_UNAVAILABLE_ON_MOBILE;
+          this.label = label;
+          this.showAccountBalance = showAccountBalance;
+          this.showEnabledWalletIcon = showEnabledWalletIcon;
+          this.message = message;
+
+          this.wallet.addEventListener('enabledWallet', () => this.updateDropdownMenu());
+          this.wallet.addEventListener('installedWalletExtensions', () => this.updateDropdownMenu());
+          this.wallet.addEventListener('stakeAddress', () => this.updateDropdownMenu());
+          this.wallet.addEventListener('connected', () => this.updateDropdownMenu());
+
+          this.wallet.startInjectWalletListener();
+          this.updateDropdownMenu();
+        }
+
+        createMenuItem(label, onClick, iconSrc, id) {
+          const item = document.createElement('span');
+          item.className = 'connect-wallet-menu-item';
+          if (onClick) item.onclick = onClick;
+          if (id) item.id = id;
+          if (iconSrc) {
+            const icon = document.createElement('img');
+            icon.src = iconSrc;
+            icon.className = 'connect-wallet-menu-item-icon';
+            item.appendChild(icon);
+          }
+          item.appendChild(document.createTextNode(label));
+          return item;
+        }
+
+        updateDropdownMenu() {
+          const availableWallets = Core.estimateAvailableWallets(
+            this.supportedWallets,
+            this.showUnavailableWallets,
+            this.alwaysVisibleWallets,
+            this.wallet.installedExtensions
+          );
+
+          const title = this.wallet.stakeAddress && this.wallet.connected
+            ? (this.showAccountBalance ? `₳ ${Math.round(this.wallet.accountBalance * 100) / 100}` : `${this.wallet.stakeAddress.slice(0, 12)}...`)
+            : this.label;
+
+          this.button.innerHTML = '';
+          this.button.textContent = title;
+
+          this.menu.innerHTML = '';
+
+          if (availableWallets.length === 0) {
+            this.menu.appendChild(this.createMenuItem(`Install a wallet (${Core.formatSupportedWallets(this.supportedWallets)} supported)`));
+          } else if (this.wallet.stakeAddress) {
+            if (this.message) {
+              this.menu.appendChild(this.createMenuItem('Sign Message', () => this.wallet.signMessage(this.message)));
+            }
+            this.menu.appendChild(this.createMenuItem('Disconnect', () => this.wallet.disconnect()));
+          } else {
+            for (const ext of availableWallets) {
+              this.menu.appendChild(this.createMenuItem(
+                Core.capitalize(ext),
+                () => this.wallet.connectToWallet(ext),
+                Core.getWalletIcon(ext)
+              ));
+            }
+          }
+        }
+      }
+
+      const container = document.getElementById('connectWallet');
+      if (container) new CardanoConnectWallet(container);
+    }
   </script>
 </body>
 </html>
