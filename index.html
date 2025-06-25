@@ -1,164 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MidKnight | Cardano Memecoin</title>
-    <link rel="stylesheet" href="https://unpkg.com/@meshsdk/react/styles.css" />
-    <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #0c0c1c;
-        color: #f8f8ff;
-        text-align: center;
-      }
-      header.hero {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        color: #f8f8ff;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-      }
-      header.hero img {
-        width: 100%;
-        max-height: 300px;
-        object-fit: cover;
-        border-bottom: 2px solid #f8f8ff33;
-      }
-      section.stats,
-      section.links,
-      section.wallet {
-        margin: 2rem auto;
-        max-width: 800px;
-        background-color: #1a1a2e;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      }
-      .stat {
-        margin: 1rem 0;
-        font-size: 1.2rem;
-      }
-      footer {
-        background-color: #000;
-        color: white;
-        padding: 1rem;
-        font-size: 0.9rem;
-      }
-      a {
-        color: #6c63ff;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-      .wallet-container button {
-        padding: 12px;
-        background-color: #6c63ff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <header class="hero">
-      <img
-        src="Midknight Logo.jpeg"
-        alt="MidKnight logo"
-        style="width: 100%; max-height: 400px; object-fit: cover"
-      />
-      <h1>MIDKNIGHT</h1>
-      <p>The memecoin of the dark 🪷🌕</p>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MidKnight | Cardano Memecoin</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #0c0c1c;
+      color: #f8f8ff;
+      text-align: center;
+    }
+    header.hero {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #f8f8ff;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+    header.hero img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-bottom: 2px solid #f8f8ff33;
+    }
+    section.stats,
+    section.links,
+    section.wallet {
+      margin: 2rem auto;
+      max-width: 800px;
+      background-color: #1a1a2e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    .stat {
+      margin: 1rem 0;
+      font-size: 1.2rem;
+    }
+    footer {
+      background-color: #000;
+      color: white;
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+    a {
+      color: #6c63ff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .wallet-button {
+      padding: 12px 24px;
+      background-color: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      margin: 10px auto;
+      display: block;
+      width: 200px;
+      transition: background-color 0.3s;
+    }
+    .wallet-button:hover {
+      background-color: #5a52d6;
+    }
+    .wallet-menu {
+      display: none;
+      position: absolute;
+      background-color: white;
+      min-width: 200px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    .wallet-menu-item {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .wallet-menu-item:hover {
+      background-color: #f1f1f1;
+    }
+    .wallet-menu-item-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+    }
+    #wallet-status {
+      margin-top: 10px;
+      color: #6c63ff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <img
+      src="Midknight-Logo.jpg"
+      alt="MidKnight logo"
+      style="width: 100%; max-height: 400px; object-fit: cover"
+    />
+    <h1>MIDKNIGHT</h1>
+    <p>The memecoin of the dark 🪷🌕</p>
+  </header>
 
-    <section class="stats">
-      <h2>Token Stats</h2>
-      <div class="stat"><span>Total Supply:</span> <strong id="supply">--</strong></div>
-      <div class="stat"><span>Burned:</span> <strong id="burned">--</strong></div>
-      <div class="stat"><span>Price:</span> $<strong id="price">--</strong></div>
-    </section>
+  <section class="stats">
+    <h2>Token Stats</h2>
+    <div class="stat"><span>Total Supply:</span> <strong id="supply">--</strong></div>
+    <div class="stat"><span>Burned:</span> <strong id="burned">--</strong></div>
+    <div class="stat"><span>Price:</span> $<strong id="price">--</strong></div>
+  </section>
 
-    <section class="wallet">
-      <h2>Connect Your Cardano Wallet</h2>
-      <div id="wallet-root" class="wallet-container"></div>
-    </section>
+  <section class="wallet">
+    <h2>Connect Your Cardano Wallet</h2>
+    <div id="wallet-connect" class="wallet-container"></div>
+    <div id="wallet-status">Wallet not connected</div>
+  </section>
 
-    <section class="links">
-      <h2>Explore the Ecosystem</h2>
-      <ul style="list-style: none; padding: 0;">
-        <li><a href="#">Launchpad</a></li>
-        <li><a href="#">Staking Portal</a></li>
-        <li><a href="#">NFT Mint</a></li>
-        <li><a href="#">Telegram Bot</a></li>
-      </ul>
-    </section>
+  <section class="links">
+    <h2>Explore the Ecosystem</h2>
+    <ul style="list-style: none; padding: 0;">
+      <li><a href="#">Launchpad</a></li>
+      <li><a href="#">Staking Portal</a></li>
+      <li><a href="#">NFT Mint</a></li>
+      <li><a href="#">Telegram Bot</a></li>
+    </ul>
+  </section>
 
-    <footer>
-      <p>
-        Made by degens for degens. Join us on
-        <a href="https://twitter.com">Twitter</a> and
-        <a href="https://discord.com">Discord</a>.
-      </p>
-    </footer>
+  <footer>
+    <p>
+      Made by degens for degens. Join us on
+      <a href="https://twitter.com">Twitter</a> and
+      <a href="https://discord.com">Discord</a>.
+    </p>
+  </footer>
 
-    <script type="module">
-      import {
-        MeshWalletProvider,
-        CardanoWallet,
-        useWallet
-      } from 'https://esm.sh/@meshsdk/react@1.3.0';
-      import { createElement, useState } from 'https://esm.sh/react';
-      import { createRoot } from 'https://esm.sh/react-dom/client';
+  <!-- Load Mesh SDK -->
+  <script src="https://unpkg.com/@meshsdk/core@latest/dist/mesh.js"></script>
 
-      const WalletApp = () => {
-        const { connected, wallet } = useWallet();
-        const [assets, setAssets] = useState([]);
-
-        const getAssets = async () => {
-          if (wallet) {
-            const _assets = await wallet.getAssets();
-            setAssets(_assets);
-          }
-        };
-
-        return createElement(
-          'div',
-          null,
-          createElement(CardanoWallet, null),
-          connected &&
-            createElement(
-              'button',
-              { onClick: getAssets, style: { marginTop: '16px' } },
-              'Get Wallet Assets'
-            ),
-          assets.length > 0 &&
-            createElement(
-              'pre',
-              { style: { textAlign: 'left', marginTop: '16px', background: '#222', color: '#fff', padding: '1rem', borderRadius: '8px' } },
-              JSON.stringify(assets, null, 2)
-            )
-        );
-      };
-
-      const rootEl = document.getElementById('wallet-root');
-      const root = createRoot(rootEl);
-      root.render(
-        createElement(MeshWalletProvider, null, createElement(WalletApp))
-      );
-    </script>
-
-    <script>
-      async function fetchStats() {
-        document.getElementById('supply').textContent = '1,000,000,000';
-        document.getElementById('burned').textContent = '150,000,000';
-        document.getElementById('price').textContent = '0.0025';
+  <script>
+    // Wait for everything to load
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Check if Mesh is available
+      if (typeof Mesh === 'undefined') {
+        console.error('Mesh SDK not loaded');
+        showFallbackButton();
+        return;
       }
+
+      const { BrowserWallet } = Mesh;
+      
+      // Initialize the wallet connection
+      initWalletConnect(BrowserWallet);
+      
+      // Fetch stats
       fetchStats();
-    </script>
-  </body>
+    });
+
+    function showFallbackButton() {
+      const container = document.getElementById('wallet-connect');
+      if (container) {
+        container.innerHTML = `
+          <button class="wallet-button" onclick="alert('Please install a Cardano wallet like Nami or Eternl')">
+            CONNECT WALLET (SDK Failed to Load)
+          </button>
+        `;
+      }
+    }
+
+    async function fetchStats() {
+      document.getElementById('supply').textContent = '1,000,000,000';
+      document.getElementById('burned').textContent = '150,000,000';
+      document.getElementById('price').textContent = '0.0025';
+    }
+
+    function initWalletConnect(BrowserWallet) {
+      let wallet = null;
+      let walletName = null;
+      
+      // Get installed wallets
+      const installedWallets = BrowserWallet.getInstalledWallets();
+      const container = document.getElementById('wallet-connect');
+      const statusElement = document.getElementById('wallet-status');
+      
+      if (!container || !statusElement) {
+        console.error('Wallet container or status element not found');
+        return;
+      }
+
+      // Create wallet dropdown HTML
+      container.innerHTML = `
+        <div class="wallet-dropdown">
+          <button class="wallet-button" id="wallet-main-button">
+            CONNECT WALLET
+          </button>
+          <div class="wallet-menu" id="wallet-menu">
+            ${installedWallets.map(wallet => `
+              <div class="wallet-menu-item" data-wallet="${wallet.name}">
+                <img src="${wallet.icon}" class="wallet-menu-item-icon" />
+                ${wallet.name}
+              </div>
+            `).join('')}
+            ${installedWallets.length === 0 ? `
+              <div class="wallet-menu-item">
+                No wallets detected. Install Nami, Eternl, or Flint.
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      // Get DOM elements
+      const walletButton = document.getElementById('wallet-main-button');
+      const walletMenu = document.getElementById('wallet-menu');
+
+      // Toggle menu visibility
+      walletButton.addEventListener('click', () => {
+        walletMenu.style.display = walletMenu.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // Handle clicks outside the menu
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.wallet-dropdown')) {
+          walletMenu.style.display = 'none';
+        }
+      });
+
+      // Handle wallet selection
+      document.querySelectorAll('.wallet-menu-item[data-wallet]').forEach(item => {
+        item.addEventListener('click', async () => {
+          const selectedWallet = item.getAttribute('data-wallet');
+          try {
+            wallet = await BrowserWallet.enable(selectedWallet);
+            walletName = selectedWallet;
+            
+            // Update UI
+            walletButton.textContent = selectedWallet;
+            statusElement.textContent = `Connected to ${selectedWallet}`;
+            walletMenu.style.display = 'none';
+            
+            // Get wallet balance
+            const lovelace = await wallet.getLovelace();
+            const adaBalance = (lovelace / 1000000).toFixed(2);
+            statusElement.textContent = `Connected to ${selectedWallet} | Balance: ${adaBalance} ADA`;
+            
+          } catch (error) {
+            console.error('Connection error:', error);
+            statusElement.textContent = `Failed to connect: ${error.message}`;
+          }
+        });
+      });
+    }
+  </script>
+</body>
 </html>
