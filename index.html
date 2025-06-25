@@ -1,144 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MidKnight | Cardano Memecoin</title>
-    <link rel="stylesheet" href="https://unpkg.com/@meshsdk/react/styles.css" />
-    <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #0c0c1c;
-        color: #f8f8ff;
-        text-align: center;
-      }
-      header.hero {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        color: #f8f8ff;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-      }
-      header.hero img {
-        width: 100%;
-        max-height: 300px;
-        object-fit: cover;
-        border-bottom: 2px solid #f8f8ff33;
-      }
-      section.stats,
-      section.links,
-      section.wallet {
-        margin: 2rem auto;
-        max-width: 800px;
-        background-color: #1a1a2e;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      }
-      .stat {
-        margin: 1rem 0;
-        font-size: 1.2rem;
-      }
-      footer {
-        background-color: #000;
-        color: white;
-        padding: 1rem;
-        font-size: 0.9rem;
-      }
-      a {
-        color: #6c63ff;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-      .wallet-container button {
-        padding: 12px;
-        background-color: #6c63ff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 10px;
-      }
-    </style>
-    <script src="https://unpkg.com/@cardano-foundation/cardano-connect-with-wallet/dist/bundle.min.js"></script>
-  </head>
-  <body>
-    <header class="hero">
-      <img
-        src="Midknight Logo.jpeg"
-        alt="MidKnight logo"
-        style="width: 100%; max-height: 400px; object-fit: cover"
-      />
-      <h1>MIDKNIGHT</h1>
-      <p>The memecoin of the dark 🩇🏵️</p>
-    </header>
+// pages/_app.tsx
+import '@/styles/globals.css';
+import type { AppProps } from 'next/app';
+import { MeshProvider } from '@meshsdk/react';
 
-    <section class="stats">
-      <h2>Token Stats</h2>
-      <div class="stat"><span>Total Supply:</span> <strong id="supply">--</strong></div>
-      <div class="stat"><span>Burned:</span> <strong id="burned">--</strong></div>
-      <div class="stat"><span>Price:</span> $<strong id="price">--</strong></div>
-    </section>
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <MeshProvider>
+      <Component {...pageProps} />
+    </MeshProvider>
+  );
+}
 
-    <section class="wallet">
-      <h2>Connect Your Cardano Wallet</h2>
-      <div id="connect-wallet-button"></div>
-    </section>
+// pages/index.tsx
+import { useWallet, CardanoWallet } from '@meshsdk/react';
+import { useState } from 'react';
 
-    <section class="links">
-      <h2>Explore the Ecosystem</h2>
-      <ul style="list-style: none; padding: 0;">
-        <li><a href="#">Launchpad</a></li>
-        <li><a href="#">Staking Portal</a></li>
-        <li><a href="#">NFT Mint</a></li>
-        <li><a href="#">Telegram Bot</a></li>
-      </ul>
-    </section>
+export default function Home() {
+  const { connected, wallet } = useWallet();
+  const [address, setAddress] = useState('');
 
-    <footer>
-      <p>
-        Made by degens for degens. Join us on
-        <a href="https://twitter.com">Twitter</a> and
-        <a href="https://discord.com">Discord</a>.
-      </p>
-    </footer>
+  const fetchAddress = async () => {
+    if (wallet) {
+      const addr = await wallet.getChangeAddress();
+      setAddress(addr);
+    }
+  };
 
-    <script>
-      const buttonContainer = document.getElementById("connect-wallet-button");
-      const connectButton = document.createElement("button");
-      connectButton.innerText = "Connect Wallet";
-      connectButton.style.padding = "12px 20px";
-      connectButton.style.backgroundColor = "#6c63ff";
-      connectButton.style.color = "white";
-      connectButton.style.border = "none";
-      connectButton.style.borderRadius = "6px";
-      connectButton.style.cursor = "pointer";
-      connectButton.style.fontWeight = "bold";
+  return (
+    <main className="min-h-screen bg-[#0c0c1c] text-white flex flex-col items-center justify-center p-8 text-center">
+      <img src="/Midknight Logo.jpeg" className="max-h-64 mb-4 rounded" alt="Midknight Logo" />
+      <h1 className="text-4xl font-bold mb-2">MIDKNIGHT</h1>
+      <p className="mb-6 text-lg text-gray-300">The memecoin of the dark 🩇🏵️</p>
 
-      connectButton.onclick = async () => {
-        const walletAPI = await CardanoConnectWithWallet.connect();
-        if (walletAPI) {
-          const address = await walletAPI.getChangeAddress();
-          alert("Connected address: " + address);
-        } else {
-          alert("Wallet connection failed or canceled.");
-        }
-      };
+      <CardanoWallet />
 
-      buttonContainer.appendChild(connectButton);
-    </script>
+      {connected && (
+        <>
+          <button
+            onClick={fetchAddress}
+            className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            Show Wallet Address
+          </button>
+          {address && <p className="mt-2 text-green-400">Connected: {address}</p>}
+        </>
+      )}
 
-    <script>
-      async function fetchStats() {
-        document.getElementById('supply').textContent = '1,000,000,000';
-        document.getElementById('burned').textContent = '150,000,000';
-        document.getElementById('price').textContent = '0.0025';
-      }
-      fetchStats();
-    </script>
-  </body>
-</html>
+      <section className="mt-12 bg-[#1a1a2e] p-6 rounded shadow-md w-full max-w-2xl">
+        <h2 className="text-2xl mb-4">Token Stats</h2>
+        <div className="text-lg">Total Supply: 1,000,000,000</div>
+        <div className="text-lg">Burned: 150,000,000</div>
+        <div className="text-lg">Price: $0.0025</div>
+      </section>
+
+      <section className="mt-12 bg-[#1a1a2e] p-6 rounded shadow-md w-full max-w-2xl">
+        <h2 className="text-2xl mb-4">Explore the Ecosystem</h2>
+        <ul className="list-none space-y-2">
+          <li><a href="#" className="text-purple-400 hover:underline">Launchpad</a></li>
+          <li><a href="#" className="text-purple-400 hover:underline">Staking Portal</a></li>
+          <li><a href="#" className="text-purple-400 hover:underline">NFT Mint</a></li>
+          <li><a href="#" className="text-purple-400 hover:underline">Telegram Bot</a></li>
+        </ul>
+      </section>
+
+      <footer className="mt-12 text-sm text-gray-500">
+        Made by degens for degens. Join us on <a href="https://twitter.com" className="underline">Twitter</a> and <a href="https://discord.com" className="underline">Discord</a>.
+      </footer>
+    </main>
+  );
+}
+
+// public/Midknight Logo.jpeg
+// (Place your logo image here)
+
+// tailwind.config.js (if not generated automatically)
+module.exports = {
+  content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+// package.json (important dependencies)
+{
+  "dependencies": {
+    "@meshsdk/core": "^x.x.x",
+    "@meshsdk/react": "^x.x.x",
+    "next": "13.x",
+    "react": "18.x",
+    "react-dom": "18.x"
+  }
+}
