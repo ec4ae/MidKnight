@@ -1,9 +1,65 @@
-// pages/_app.tsx
-import '@/styles/globals.css';
-import type { AppProps } from 'next/app';
-import { MeshProvider } from '@meshsdk/react';
+// MidKnight Wallet Integration with Mesh SDK, Lace, and Yoroi
 
-export default function App({ Component, pageProps }: AppProps) {
+import { useState } from 'react';
+import type { NextPage } from 'next';
+import { MeshProvider, useWallet } from '@meshsdk/react';
+import { CardanoWallet } from '@meshsdk/react';
+import Head from 'next/head';
+import '../styles/globals.css';
+import '@meshsdk/react/styles.css';
+
+const Home: NextPage = () => {
+  const { connected, wallet } = useWallet();
+  const [assets, setAssets] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function getAssets() {
+    if (wallet) {
+      setLoading(true);
+      const _assets = await wallet.getAssets();
+      setAssets(_assets);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white font-sans p-6">
+      <Head>
+        <title>MidKnight - Cardano Memecoin</title>
+        <meta name="description" content="MidKnight: A Cardano-based meme token" />
+      </Head>
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold text-center text-purple-400 mb-6">Welcome to MidKnight</h1>
+        <div className="flex justify-center mb-4">
+          <CardanoWallet />
+        </div>
+        {connected && (
+          <>
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold text-purple-300 mb-2">Your Wallet Assets</h2>
+              {assets ? (
+                <pre className="bg-gray-800 text-left p-4 rounded overflow-x-auto">
+                  <code>{JSON.stringify(assets, null, 2)}</code>
+                </pre>
+              ) : (
+                <button
+                  onClick={getAssets}
+                  disabled={loading}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded shadow-md"
+                >
+                  {loading ? 'Loading...' : 'Get Assets'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// App wrapper with MeshProvider for global context
+function MyApp({ Component, pageProps }) {
   return (
     <MeshProvider>
       <Component {...pageProps} />
@@ -11,84 +67,4 @@ export default function App({ Component, pageProps }: AppProps) {
   );
 }
 
-// pages/index.tsx
-import { useWallet, CardanoWallet } from '@meshsdk/react';
-import { useState } from 'react';
-
-export default function Home() {
-  const { connected, wallet } = useWallet();
-  const [address, setAddress] = useState('');
-
-  const fetchAddress = async () => {
-    if (wallet) {
-      const addr = await wallet.getChangeAddress();
-      setAddress(addr);
-    }
-  };
-
-  return (
-    <main className="min-h-screen bg-[#0c0c1c] text-white flex flex-col items-center justify-center p-8 text-center">
-      <img src="/Midknight Logo.jpeg" className="max-h-64 mb-4 rounded" alt="Midknight Logo" />
-      <h1 className="text-4xl font-bold mb-2">MIDKNIGHT</h1>
-      <p className="mb-6 text-lg text-gray-300">The memecoin of the dark 🩇🏵️</p>
-
-      <CardanoWallet />
-
-      {connected && (
-        <>
-          <button
-            onClick={fetchAddress}
-            className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          >
-            Show Wallet Address
-          </button>
-          {address && <p className="mt-2 text-green-400">Connected: {address}</p>}
-        </>
-      )}
-
-      <section className="mt-12 bg-[#1a1a2e] p-6 rounded shadow-md w-full max-w-2xl">
-        <h2 className="text-2xl mb-4">Token Stats</h2>
-        <div className="text-lg">Total Supply: 1,000,000,000</div>
-        <div className="text-lg">Burned: 150,000,000</div>
-        <div className="text-lg">Price: $0.0025</div>
-      </section>
-
-      <section className="mt-12 bg-[#1a1a2e] p-6 rounded shadow-md w-full max-w-2xl">
-        <h2 className="text-2xl mb-4">Explore the Ecosystem</h2>
-        <ul className="list-none space-y-2">
-          <li><a href="#" className="text-purple-400 hover:underline">Launchpad</a></li>
-          <li><a href="#" className="text-purple-400 hover:underline">Staking Portal</a></li>
-          <li><a href="#" className="text-purple-400 hover:underline">NFT Mint</a></li>
-          <li><a href="#" className="text-purple-400 hover:underline">Telegram Bot</a></li>
-        </ul>
-      </section>
-
-      <footer className="mt-12 text-sm text-gray-500">
-        Made by degens for degens. Join us on <a href="https://twitter.com" className="underline">Twitter</a> and <a href="https://discord.com" className="underline">Discord</a>.
-      </footer>
-    </main>
-  );
-}
-
-// public/Midknight Logo.jpeg
-// (Place your logo image here)
-
-// tailwind.config.js (if not generated automatically)
-module.exports = {
-  content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-
-// package.json (important dependencies)
-{
-  "dependencies": {
-    "@meshsdk/core": "^x.x.x",
-    "@meshsdk/react": "^x.x.x",
-    "next": "13.x",
-    "react": "18.x",
-    "react-dom": "18.x"
-  }
-}
+export default MyApp;
