@@ -4,223 +4,129 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MidKnight | Cardano Memecoin</title>
+  <link rel="stylesheet" href="https://unpkg.com/@meshsdk/react/styles.css">
   <style>
-    /* Wallet Connection Styles */
-    .wallet-container {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .wallet-dropdown {
-      position: relative;
-      display: inline-block;
-      min-width: 200px;
-    }
-    
-    .wallet-button {
-      padding: 12px 24px;
-      background-color: #000;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-    
-    .wallet-button:hover {
-      background-color: #333;
-    }
-    
-    .wallet-menu {
+    .connect-wallet-menu {
       display: none;
       position: absolute;
-      background-color: white;
-      min-width: 200px;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-      z-index: 1;
-      border-radius: 4px;
+      margin-top: 8px;
+      font-family: sans-serif;
+      width: 100%;
       overflow: hidden;
-      margin-top: 5px;
+      z-index: 10;
     }
-    
-    .wallet-menu-item {
-      color: black;
+
+    .connect-wallet-menu-item {
+      color: #000;
       padding: 12px 16px;
       text-decoration: none;
       display: flex;
       align-items: center;
       cursor: pointer;
+      border-color: #000;
+      border-style: solid;
+      border-width: 1px;
+      border-bottom: none;
+      background-color: white;
+      transition: border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     }
-    
-    .wallet-menu-item:hover {
-      background-color: #f1f1f1;
+
+    .connect-wallet-menu-item:hover {
+      background-color: #eee;
     }
-    
-    .wallet-menu-item-icon {
+
+    .connect-wallet-menu-item:first-child {
+      border-bottom: none;
+    }
+
+    .connect-wallet-menu-item:last-child {
+      border-bottom: 1px solid #000;
+    }
+
+    .connect-wallet-menu-item-icon {
       width: 24px;
       height: 24px;
-      margin-right: 10px;
+      margin-right: 8px;
     }
-    
-    /* Page Styles */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f5f5f5;
+
+    .connect-wallet-button {
+      padding: 16px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid #000;
+      color: #000;
+      background-color: white;
+    }
+
+    .connect-wallet-button:disabled {
+      border: 1px solid #333;
       color: #333;
+      background-color: #eee;
     }
-    
-    .hero {
-      text-align: center;
-      padding: 2rem;
-      background-color: #000;
-      color: white;
+
+    .connect-wallet-dropdown {
+      min-width: 180px;
+      max-width: 240px;
+      font-weight: bold;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+      padding-top: 8px;
     }
-    
-    .logo {
-      max-width: 300px;
-      height: auto;
-      margin: 0 auto;
+
+    .connect-wallet-dropdown:hover .connect-wallet-menu {
       display: block;
     }
-    
-    .hero h1 {
-      font-size: 3rem;
-      margin: 1rem 0;
-    }
-    
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      padding: 2rem;
-      background-color: white;
-      margin: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .stat {
-      text-align: center;
-    }
-    
-    .links {
-      padding: 2rem;
-      text-align: center;
-    }
-    
-    .links ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-    }
-    
-    .links a {
-      color: #000;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    
-    footer {
-      text-align: center;
-      padding: 2rem;
-      margin-top: 2rem;
+
+    .connect-wallet-dropdown:hover .connect-wallet-button {
       background-color: #000;
-      color: white;
-    }
-    
-    footer a {
       color: #fff;
     }
 
-    #wallet-status {
-      margin-top: 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-
-    #wallet-info {
-      margin-top: 15px;
-      padding: 10px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      max-width: 500px;
+    .connect-wallet-modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
       width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
     }
 
-    .wallet-detail {
-      margin: 5px 0;
-      font-size: 0.9em;
-      word-break: break-all;
-    }
-
-    .wallet-section {
-      margin-bottom: 15px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .wallet-section-title {
-      font-weight: bold;
-      margin-bottom: 5px;
-      color: #333;
-    }
-
-    .wallet-asset {
+    .connect-wallet-modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #aeaeae;
+      border-radius: 9px;
+      width: fit-content;
       display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px dashed #eee;
-    }
-
-    #advanced-actions {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .action-button {
-      padding: 8px 16px;
-      margin: 0 5px;
-      background-color: #000;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      flex-direction: column;
+      align-items: center;
     }
   </style>
 </head>
 <body>
   <header class="hero">
-    <img src="Midknight-Logo.jpg" alt="MidKnight logo" class="logo">
+    <img src="Midknight Logo.jpeg" alt="MidKnight logo" style="width: 100%; max-height: 400px; object-fit: cover;">
     <h1>MIDKNIGHT</h1>
     <p>The memecoin of the dark 🦇🌕</p>
-    <div class="wallet-container">
-      <div id="wallet-connect"></div>
-      <div id="wallet-status">Wallet not connected</div>
-      <div id="wallet-info" style="display: none;"></div>
-      <div id="advanced-actions" style="display: none;">
-        <button class="action-button" id="sign-data-btn">Sign Message</button>
-        <button class="action-button" id="get-utxos-btn">Get UTXOs</button>
-        <button class="action-button" id="get-assets-btn">Get Assets</button>
-      </div>
-    </div>
+    <div id="connectWallet"></div>
   </header>
 
   <section class="stats">
-    <div class="stat"><span>Total Supply:</span> <strong id="supply">1,000,000,000</strong></div>
-    <div class="stat"><span>Burned:</span> <strong id="burned">150,000,000</strong></div>
-    <div class="stat"><span>Price:</span> $<strong id="price">0.0025</strong></div>
+    <div class="stat"><span>Total Supply:</span> <strong id="supply">--</strong></div>
+    <div class="stat"><span>Burned:</span> <strong id="burned">--</strong></div>
+    <div class="stat"><span>Price:</span> $<strong id="price">--</strong></div>
   </section>
 
   <section class="links">
@@ -237,269 +143,39 @@
     <p>Made by degens for degens. Join us on <a href="https://twitter.com">Twitter</a> and <a href="https://discord.com">Discord</a>.</p>
   </footer>
 
-  <!-- Load Mesh SDK -->
-  <script src="https://unpkg.com/@meshsdk/core@latest/dist/mesh.js"></script>
+  <script type="module">
+    import { MeshWalletProvider, CardanoWallet } from 'https://esm.sh/@meshsdk/react@latest';
+
+    const root = document.getElementById('connectWallet');
+    if (root) {
+      const shadow = root.attachShadow({ mode: 'open' });
+      const container = document.createElement('div');
+      container.innerHTML = `
+        <style>
+          button {
+            padding: 12px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
+        </style>
+        <mesh-wallet-provider>
+          <cardano-wallet></cardano-wallet>
+        </mesh-wallet-provider>
+      `;
+      shadow.appendChild(container);
+    }
+  </script>
 
   <script>
-    // Global wallet reference
-    let wallet = null;
-    let walletName = null;
-
-    // Wait for everything to load
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Check if Mesh is available
-      if (typeof Mesh === 'undefined') {
-        console.error('Mesh SDK not loaded');
-        showFallbackButton();
-        return;
-      }
-
-      const { BrowserWallet } = Mesh;
-      
-      // Initialize the wallet connection UI
-      initWalletUI(BrowserWallet);
-    });
-
-    function showFallbackButton() {
-      const container = document.getElementById('wallet-connect');
-      if (container) {
-        container.innerHTML = `
-          <button class="wallet-button" onclick="alert('Please install a Cardano wallet like Nami or Eternl')">
-            CONNECT WALLET (SDK Failed to Load)
-          </button>
-        `;
-      }
+    async function fetchStats() {
+      document.getElementById('supply').textContent = '1,000,000,000';
+      document.getElementById('burned').textContent = '150,000,000';
+      document.getElementById('price').textContent = '0.0025';
     }
-
-    async function initWalletUI(BrowserWallet) {
-      const container = document.getElementById('wallet-connect');
-      const statusElement = document.getElementById('wallet-status');
-      const infoElement = document.getElementById('wallet-info');
-      const advancedActions = document.getElementById('advanced-actions');
-      
-      if (!container || !statusElement) {
-        console.error('Required elements not found');
-        return;
-      }
-
-      // Get installed wallets
-      const installedWallets = BrowserWallet.getInstalledWallets();
-      
-      // Create wallet dropdown HTML
-      container.innerHTML = `
-        <div class="wallet-dropdown">
-          <button class="wallet-button" id="wallet-main-button">
-            CONNECT WALLET
-          </button>
-          <div class="wallet-menu" id="wallet-menu">
-            ${installedWallets.map(wallet => `
-              <div class="wallet-menu-item" data-wallet="${wallet.name}">
-                <img src="${wallet.icon}" class="wallet-menu-item-icon" />
-                ${wallet.name}
-              </div>
-            `).join('')}
-            ${installedWallets.length === 0 ? `
-              <div class="wallet-menu-item">
-                No wallets detected. Install Nami, Eternl, or Flint.
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
-
-      // Get DOM elements
-      const walletButton = document.getElementById('wallet-main-button');
-      const walletMenu = document.getElementById('wallet-menu');
-
-      // Toggle menu visibility
-      walletButton.addEventListener('click', () => {
-        walletMenu.style.display = walletMenu.style.display === 'block' ? 'none' : 'block';
-      });
-
-      // Handle clicks outside the menu
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.wallet-dropdown')) {
-          walletMenu.style.display = 'none';
-        }
-      });
-
-      // Handle wallet selection
-      document.querySelectorAll('.wallet-menu-item[data-wallet]').forEach(item => {
-        item.addEventListener('click', async () => {
-          const selectedWallet = item.getAttribute('data-wallet');
-          try {
-            // Enable wallet with CIP-95 support
-            wallet = await BrowserWallet.enable(selectedWallet, [95]);
-            walletName = selectedWallet;
-            
-            // Update UI
-            walletButton.textContent = selectedWallet;
-            statusElement.textContent = `Connected to ${selectedWallet}`;
-            walletMenu.style.display = 'none';
-            infoElement.style.display = 'block';
-            advancedActions.style.display = 'block';
-            
-            // Get and display wallet info
-            await updateWalletInfo();
-            
-          } catch (error) {
-            console.error('Connection error:', error);
-            statusElement.textContent = `Failed to connect: ${error.message}`;
-          }
-        });
-      });
-
-      // Set up advanced action buttons
-      document.getElementById('sign-data-btn').addEventListener('click', signData);
-      document.getElementById('get-utxos-btn').addEventListener('click', getUTXOs);
-      document.getElementById('get-assets-btn').addEventListener('click', getAssets);
-    }
-
-    // Update wallet info display
-    async function updateWalletInfo() {
-      const infoElement = document.getElementById('wallet-info');
-      const statusElement = document.getElementById('wallet-status');
-      
-      if (!wallet || !infoElement) return;
-
-      try {
-        // Get all wallet information
-        const [
-          balance,
-          lovelace,
-          changeAddress,
-          networkId,
-          rewardAddresses,
-          usedAddresses,
-          unusedAddresses,
-          extensions,
-          policyIds,
-          drepInfo
-        ] = await Promise.all([
-          wallet.getBalance(),
-          wallet.getLovelace(),
-          wallet.getChangeAddress(),
-          wallet.getNetworkId(),
-          wallet.getRewardAddresses(),
-          wallet.getUsedAddresses(),
-          wallet.getUnusedAddresses(),
-          wallet.getExtensions(),
-          wallet.getPolicyIds(),
-          wallet.getDRep ? wallet.getDRep() : Promise.resolve(null)
-        ]);
-
-        // Format balance (1 ADA = 1,000,000 lovelace)
-        const adaBalance = (lovelace / 1000000).toFixed(6);
-        
-        // Build wallet info HTML
-        infoElement.innerHTML = `
-          <div class="wallet-section">
-            <div class="wallet-section-title">Basic Info</div>
-            <div class="wallet-detail"><strong>Network:</strong> ${networkId === 1 ? 'Mainnet' : 'Testnet'}</div>
-            <div class="wallet-detail"><strong>Balance:</strong> ${adaBalance} ADA</div>
-          </div>
-          
-          <div class="wallet-section">
-            <div class="wallet-section-title">Addresses</div>
-            <div class="wallet-detail"><strong>Change Address:</strong> ${shortenAddress(changeAddress)}</div>
-            <div class="wallet-detail"><strong>Reward Address:</strong> ${rewardAddresses.length ? shortenAddress(rewardAddresses[0]) : 'None'}</div>
-          </div>
-          
-          <div class="wallet-section">
-            <div class="wallet-section-title">Assets (${balance.length})</div>
-            ${balance.slice(0, 5).map(asset => `
-              <div class="wallet-asset">
-                <span>${asset.unit === 'lovelace' ? 'ADA' : shortenAssetName(asset.unit)}</span>
-                <span>${formatQuantity(asset.quantity)}</span>
-              </div>
-            `).join('')}
-            ${balance.length > 5 ? `<div class="wallet-detail">+ ${balance.length - 5} more assets</div>` : ''}
-          </div>
-          
-          ${drepInfo ? `
-          <div class="wallet-section">
-            <div class="wallet-section-title">DRep Info (CIP-95)</div>
-            <div class="wallet-detail"><strong>DRep ID:</strong> ${shortenAddress(drepInfo.dRepIDCip105)}</div>
-          </div>
-          ` : ''}
-          
-          <div class="wallet-section">
-            <div class="wallet-section-title">Extensions</div>
-            <div class="wallet-detail">${extensions.map(ext => `CIP-${ext.cip}`).join(', ') || 'None'}</div>
-          </div>
-        `;
-        
-      } catch (error) {
-        console.error('Error getting wallet info:', error);
-        statusElement.textContent = `Error loading wallet details: ${error.message}`;
-      }
-    }
-
-    // Helper to shorten addresses
-    function shortenAddress(address, chars = 8) {
-      return address ? `${address.substring(0, chars)}...${address.substring(address.length - chars)}` : '';
-    }
-
-    // Helper to shorten asset names
-    function shortenAssetName(unit, chars = 8) {
-      if (unit === 'lovelace') return 'ADA';
-      if (unit.length <= 16) return unit;
-      return `${unit.substring(0, chars)}...${unit.substring(unit.length - chars)}`;
-    }
-
-    // Helper to format quantities
-    function formatQuantity(quantity) {
-      if (quantity.length > 10) {
-        return `${quantity.substring(0, 4)}...${quantity.substring(quantity.length - 4)}`;
-      }
-      return quantity;
-    }
-
-    // Sign data function
-    async function signData() {
-      if (!wallet) return;
-      
-      try {
-        const addresses = await wallet.getUsedAddresses();
-        const payload = "MidKnight Memecoin Verification";
-        const signature = await wallet.signData(addresses[0], payload);
-        
-        alert(`Successfully signed data!\n\nPayload: ${payload}\n\nSignature: ${signature.signature.substring(0, 30)}...`);
-      } catch (error) {
-        console.error('Error signing data:', error);
-        alert(`Failed to sign data: ${error.message}`);
-      }
-    }
-
-    // Get UTXOs function
-    async function getUTXOs() {
-      if (!wallet) return;
-      
-      try {
-        const utxos = await wallet.getUtxos();
-        alert(`Found ${utxos.length} UTXOs in wallet.\n\nFirst UTXO value: ${utxos[0]?.output?.amount[0]?.quantity || 'N/A'} lovelace`);
-      } catch (error) {
-        console.error('Error getting UTXOs:', error);
-        alert(`Failed to get UTXOs: ${error.message}`);
-      }
-    }
-
-    // Get assets function
-    async function getAssets() {
-      if (!wallet) return;
-      
-      try {
-        const assets = await wallet.getAssets();
-        const assetList = assets.slice(0, 5).map(asset => 
-          `${asset.assetName || asset.unit}: ${asset.quantity}`
-        ).join('\n');
-        
-        alert(`Wallet Assets (${assets.length}):\n\n${assetList}${assets.length > 5 ? '\n...and more' : ''}`);
-      } catch (error) {
-        console.error('Error getting assets:', error);
-        alert(`Failed to get assets: ${error.message}`);
-      }
-    }
+    fetchStats();
   </script>
 </body>
 </html>
